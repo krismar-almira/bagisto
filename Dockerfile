@@ -1,7 +1,7 @@
 FROM php:8.2-fpm
 
 # ------------------------------------------------------------
-# Install system dependencies
+# System Dependencies
 # ------------------------------------------------------------
 RUN apt-get update && apt-get install -y \
     git \
@@ -15,42 +15,29 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------------------------------------
-# Install NodeJS (Node 18)
+# Install NodeJS 18
 # ------------------------------------------------------------
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
 # ------------------------------------------------------------
-# Configure & Install PHP Extensions
+# PHP Extensions
 # ------------------------------------------------------------
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql zip bcmath mbstring
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install pdo_mysql zip bcmath mbstring
 
 # ------------------------------------------------------------
-# Install Composer
+# Composer
 # ------------------------------------------------------------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# ------------------------------------------------------------
-# Copy project
-# ------------------------------------------------------------
 COPY . .
 
-# ------------------------------------------------------------
-# Install PHP dependencies
-# ------------------------------------------------------------
 RUN composer install --no-dev --optimize-autoloader
 
-# ------------------------------------------------------------
-# Install JS dependencies & build assets
-# ------------------------------------------------------------
 RUN npm install && npm run build
 
-# ------------------------------------------------------------
-# Permissions
-# ------------------------------------------------------------
-RUN chown -R www-data:www-data /var/www/html
-
-CMD ["php-fpm"]
+RUN chow
