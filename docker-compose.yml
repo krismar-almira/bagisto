@@ -16,7 +16,6 @@ services:
     volumes:
       - .:/var/www/html
     depends_on:
-      - mysql
       - redis
 
 #   mysql:
